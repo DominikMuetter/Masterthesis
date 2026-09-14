@@ -1,0 +1,149 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  12
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     simpleFoam;
+
+solver          incompressibleFluid;
+
+startFrom       latestTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         2000;
+
+deltaT          1;
+
+writeControl    timeStep;
+
+writeInterval   500;
+
+purgeWrite      0;
+
+writeFormat     binary;
+
+writePrecision  6;
+
+writeCompression false;
+
+timeFormat      general;
+
+timePrecision   6;
+
+runTimeModifiable true;
+
+adjustTimeStep  true;
+
+maxCo           0.9;
+
+functions {
+  yPlus1 {
+    type            yPlus;
+    libs            (fieldFunctionObjects);
+    writeFields     yes;
+    executeControl  timeStep;
+    executeInterval 1;
+    writeControl    timeStep;
+  }
+
+  loggingK {
+    type          fieldMinMax;
+    libs          (fieldFunctionObjects);
+    writeControl  timeStep;
+    writeFields   true;           // writes fields min/max as volScalarFields
+    log           true;           // writes min/max to log
+    // region        "";             // (if using regions, specify region name)
+    fields        ( k );
+  }
+  loggingOmega {
+    type          fieldMinMax;
+    libs          (fieldFunctionObjects);
+    writeControl  timeStep;
+    writeFields   true;
+    log           true;
+    fields        ( omega );
+  }
+
+  ReynoldsNumber1
+  {
+    type            coded;
+    libs            (utilityFunctionObjects);
+    name            ReynoldsNumber1;
+
+    executeControl  timeStep;
+    executeInterval 1;
+
+    writeControl    timeStep;
+    writeInterval   1;
+
+    codeInclude #{
+      #include "fvMesh.H"
+      #include "volFields.H"
+      #include "surfaceFields.H"
+      #include "IOdictionary.H"
+      #include "PstreamReduceOps.H"
+    #};
+
+    codeExecute #{
+      const fvMesh& mesh = refCast<const fvMesh>(obr_);
+
+      const volVectorField& U = mesh.lookupObject<volVectorField>("U");
+
+      const IOdictionary& transportProperties = mesh.lookupObject<IOdictionary>("transportProperties");
+
+      dimensionedScalar nu
+      (
+        "nu",
+        dimViscosity,
+        transportProperties.lookup("nu")
+      );
+
+      // Characteristic length [m]
+      // For your square channel: side length = hydraulic diameter = 0.05 m
+      const scalar Lchar = 0.05;
+
+      // Volume-averaged velocity magnitude
+      const vectorField& Uc = U.primitiveField();
+      const scalarField& V  = mesh.V();
+
+      scalar localVol     = 0.0;
+      scalar localUmagVol = 0.0;
+
+      forAll(Uc, celli)
+      {
+          localVol     += V[celli];
+          localUmagVol += mag(Uc[celli])*V[celli];
+      }
+
+      reduce(localVol, sumOp<scalar>());
+      reduce(localUmagVol, sumOp<scalar>());
+
+      scalar Umean = localUmagVol/(localVol + VSMALL);
+
+      scalar Re    = Umean*Lchar/nu.value();
+
+      Info<< "ReynoldsNumber1:" << nl
+          << "    Umean = " << Umean << " m/s" << nl
+          << "    Lchar = " << Lchar << " m" << nl
+          << "    nu    = " << nu.value() << " m2/s" << nl
+          << "    Re    = " << Re << nl
+          << endl;
+    #};
+  }
+}
+
+// ************************************************************************* //

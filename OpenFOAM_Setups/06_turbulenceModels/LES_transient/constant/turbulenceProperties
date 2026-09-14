@@ -1,0 +1,52 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2506                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      turbulenceProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+simulationType  LES;
+
+LES
+{
+    // Classical LES SGS model
+    model               WALE;
+
+    turbulence          on;
+    printCoeffs         on;
+
+    // Use a smoothed geometric LES filter width.
+    // This avoids abrupt jumps in SGS viscosity across refinement interfaces.
+    delta               smooth;
+
+    smoothCoeffs
+    {
+        delta           cubeRootVol;
+
+        cubeRootVolCoeffs
+        {
+            deltaCoeff  1;
+        }
+
+        maxDeltaRatio   1.1;
+    }
+
+    WALECoeffs
+    {
+        Ck              0.094;
+        Ce              1.048;
+        Cw              0.325;
+    }
+}
+
+
+// ************************************************************************* //

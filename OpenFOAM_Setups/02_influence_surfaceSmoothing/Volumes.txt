@@ -1,0 +1,16 @@
+AlphaWrap:
+  Fluid volume = 0.0008669601
+  Total volume = 0.0008754550248465 (0.35 x 0.0500031 x 0.0500229)
+  Porosity     = 0.9902965886
+
+HC Laplacian Smoothing (broken mesh):
+  Fluid volume = 0.0008745014
+  Total volume = 0.0008774867425065 (0.35 x 0.0500631 x 0.0500789)
+  Porosity     = 0.9965978489
+
+Non-Smoothed:
+  Fluid volume = 0.0008694375
+  Total volume = 0.000875383290894 (0.35 x 0.0500127 x 0.0500092)
+  Porosity     = 0.9932077857
+
+Max difference in porosity = 0.6322771323%

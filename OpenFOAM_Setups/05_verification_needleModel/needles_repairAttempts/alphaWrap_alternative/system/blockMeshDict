@@ -1,0 +1,109 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  12
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      blockMeshDict;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+scale 1; // formerly "convertToMeters"
+
+mainBlock
+{
+    xMin   -0.15;
+    xMax    0.2;
+    yMin   -0.025;
+    yMax    0.025;
+    zMin    0.00;
+    zMax    0.05;
+}
+
+nCells
+{
+    y            70;
+    z            70;
+    mainBlockX   470; 
+}
+
+vertices
+(
+    // main block
+    ($mainBlock/xMin $mainBlock/yMin $mainBlock/zMin) // 0
+    ($mainBlock/xMax $mainBlock/yMin $mainBlock/zMin) // 1
+    ($mainBlock/xMax $mainBlock/yMax $mainBlock/zMin) // 2
+    ($mainBlock/xMin $mainBlock/yMax $mainBlock/zMin) // 3
+    ($mainBlock/xMin $mainBlock/yMin $mainBlock/zMax) // 4
+    ($mainBlock/xMax $mainBlock/yMin $mainBlock/zMax) // 5
+    ($mainBlock/xMax $mainBlock/yMax $mainBlock/zMax) // 6
+    ($mainBlock/xMin $mainBlock/yMax $mainBlock/zMax) // 7
+
+);
+
+blocks
+(
+    hex (0 1 2 3 4 5 6 7)         ($nCells/mainBlockX $nCells/y $nCells/z)   simpleGrading (1 1 1) // main block
+);
+
+edges
+(
+);
+
+boundary
+(
+    // main block with geometry
+    IN_MAIN {
+        type patch;
+        faces
+        (
+            (0 4 7 3)
+        );
+    }
+    OUT_MAIN {
+        type patch;
+        faces
+        (
+            (1 5 6 2)
+        );
+    }
+    MAIN_WW_Y1 {
+        type wall;
+        faces
+        (
+            (0 4 5 1)
+        );
+    }
+    MAIN_WW_Y2 {
+        type wall;
+        faces
+        (
+            (3 2 6 7)
+        );
+    }
+    MAIN_WW_Z1 {
+        type wall;
+        faces
+        (
+            (0 3 2 1)
+        );
+    }
+    MAIN_WW_Z2 {
+        type wall;
+        faces
+        (
+            (4 7 6 5)
+        );
+    }
+
+);
+
+mergePatchPairs();
+// ************************************************************************* //

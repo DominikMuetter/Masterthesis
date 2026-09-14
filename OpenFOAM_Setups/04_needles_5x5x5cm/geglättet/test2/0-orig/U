@@ -1,0 +1,58 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2506                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    format      ascii;
+    class       volVectorField;
+    location    "0";
+    object      U;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 1 -1 0 0 0 0];
+
+internalField   uniform (0 0 0);
+
+boundaryField
+{
+    #includeEtc "caseDicts/setConstraintTypes"
+
+    IN_X1 {
+        type            fixedValue;
+        value           uniform (2 0 0); // from Eric Mueller paper: 8 speeds: 0.25, 0.5, 0.75, ... 2.0 m/s
+    }
+
+    OUT_X2 {
+        type            pressureInletOutletVelocity;//inletOutlet;
+        inletValue      uniform (0 0 0);
+        value           $internalField;
+        // type            zeroGradient;
+    }
+    
+    // walls
+    "WW_(Y1|Y2|Z1|Z2)" {
+        type            noSlip;
+    }
+
+    "MAIN_WW_(Y1|Y2|Z1|Z2)" {
+        type            noSlip;
+    }
+
+    surface {
+        type            noSlip;
+    }
+
+    "(OUT_FORERUNNING|IN_MAIN|OUT_MAIN|IN_TAILING)" {
+        /* type            inletOutlet;
+        inletValue      uniform (0 0 0);
+        value           $internalField; */
+        type            zeroGradient;
+    }
+}
+
+// ************************************************************************* //

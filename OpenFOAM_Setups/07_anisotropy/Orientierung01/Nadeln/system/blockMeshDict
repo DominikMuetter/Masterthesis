@@ -1,0 +1,240 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  12
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      blockMeshDict;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+scale 1; // formerly "convertToMeters"
+
+mainBlock
+{
+    xMin   -0.02;
+    xMax    0.14;
+    yMin   -0.025;
+    yMax    0.025;
+    zMin    0.00;
+    zMax    0.05;
+}
+
+forerunnings
+{
+    xMin   -0.15;
+    xMax   -0.02;
+    yMin   -0.025;
+    yMax    0.025;
+    zMin    0.00;
+    zMax    0.05;
+}
+
+tailings
+{
+    xMin    0.14;
+    xMax    0.27;
+    yMin   -0.025;
+    yMax    0.025;
+    zMin    0.00;
+    zMax    0.05;
+}
+
+nCells
+{
+    y            79;
+    z            79;
+    forerunningX 238;
+    mainBlockX   79;
+    tailingsX    238;
+}
+
+vertices
+(
+    // main block
+    ($mainBlock/xMin $mainBlock/yMin $mainBlock/zMin) // 0
+    ($mainBlock/xMax $mainBlock/yMin $mainBlock/zMin) // 1
+    ($mainBlock/xMax $mainBlock/yMax $mainBlock/zMin) // 2
+    ($mainBlock/xMin $mainBlock/yMax $mainBlock/zMin) // 3
+    ($mainBlock/xMin $mainBlock/yMin $mainBlock/zMax) // 4
+    ($mainBlock/xMax $mainBlock/yMin $mainBlock/zMax) // 5
+    ($mainBlock/xMax $mainBlock/yMax $mainBlock/zMax) // 6
+    ($mainBlock/xMin $mainBlock/yMax $mainBlock/zMax) // 7
+
+    // forerunnings
+    ($forerunnings/xMin $forerunnings/yMin $forerunnings/zMin) // 8
+    ($forerunnings/xMax $forerunnings/yMin $forerunnings/zMin) // 9
+    ($forerunnings/xMax $forerunnings/yMax $forerunnings/zMin) // 10
+    ($forerunnings/xMin $forerunnings/yMax $forerunnings/zMin) // 11
+    ($forerunnings/xMin $forerunnings/yMin $forerunnings/zMax) // 12
+    ($forerunnings/xMax $forerunnings/yMin $forerunnings/zMax) // 13
+    ($forerunnings/xMax $forerunnings/yMax $forerunnings/zMax) // 14
+    ($forerunnings/xMin $forerunnings/yMax $forerunnings/zMax) // 15
+    
+    // tailings
+    ($tailings/xMin $tailings/yMin $tailings/zMin) // 16
+    ($tailings/xMax $tailings/yMin $tailings/zMin) // 17
+    ($tailings/xMax $tailings/yMax $tailings/zMin) // 18
+    ($tailings/xMin $tailings/yMax $tailings/zMin) // 19
+    ($tailings/xMin $tailings/yMin $tailings/zMax) // 20
+    ($tailings/xMax $tailings/yMin $tailings/zMax) // 21
+    ($tailings/xMax $tailings/yMax $tailings/zMax) // 22
+    ($tailings/xMin $tailings/yMax $tailings/zMax) // 23
+
+);
+
+blocks
+(
+    hex (0 1 2 3 4 5 6 7)         ($nCells/mainBlockX $nCells/y $nCells/z)   simpleGrading (1 1 1) // main block
+    hex (8 9 10 11 12 13 14 15)   ($nCells/forerunningX $nCells/y $nCells/z) simpleGrading (1 1 1) // forerunnings
+    hex (16 17 18 19 20 21 22 23) ($nCells/tailingsX $nCells/y $nCells/z)    simpleGrading (1 1 1) // tailings
+);
+
+edges
+(
+);
+
+boundary
+(
+    // main block with geometry
+    IN_MAIN {
+        type patch;
+        faces
+        (
+            (0 4 7 3)
+        );
+    }
+    OUT_MAIN {
+        type patch;
+        faces
+        (
+            (1 5 6 2)
+        );
+    }
+    MAIN_WW_Y1 {
+        type wall;
+        faces
+        (
+            (0 4 5 1)
+        );
+    }
+    MAIN_WW_Y2 {
+        type wall;
+        faces
+        (
+            (3 2 6 7)
+        );
+    }
+    MAIN_WW_Z1 {
+        type wall;
+        faces
+        (
+            (0 3 2 1)
+        );
+    }
+    MAIN_WW_Z2 {
+        type wall;
+        faces
+        (
+            (4 7 6 5)
+        );
+    }
+
+    // forerunnings
+    IN_FR {
+        type patch;
+        faces
+        (
+            (8 12 15 11)
+        );
+    }
+    OUT_FR {
+        type patch;
+        faces
+        (
+            (9 10 14 13)
+        );
+    }
+    FR_WW_Y1 {
+        type wall;
+        faces
+        (
+            (8 9 13 12)
+        );
+    }
+    FR_WW_Y2 {
+        type wall;
+        faces
+        (
+            (11 15 14 10)
+        );
+    }
+    FR_WW_Z1 {
+        type wall;
+        faces
+        (
+            (8 11 10 9)
+        );
+    }
+    FR_WW_Z2 {
+        type wall;
+        faces
+        (
+            (12 13 14 15)
+        );
+    }
+
+    // tailings
+    IN_T {
+        type patch;
+        faces
+        (
+            (16 20 23 19)
+        );
+    }
+    OUT_T {
+        type patch;
+        faces
+        (
+            (17 21 22 18)
+        );
+    }
+    T_WW_Y1 {
+        type wall;
+        faces
+        (
+            (16 17 21 20)
+        );
+    }
+    T_WW_Y2 {
+        type wall;
+        faces
+        (
+            (19 18 22 23)
+        );
+    }
+    T_WW_Z1 {
+        type wall;
+        faces
+        (
+            (16 19 18 17)
+        );
+    }
+    T_WW_Z2 {
+        type wall;
+        faces
+        (
+            (20 21 22 23)
+        );
+    }
+);
+
+mergePatchPairs();
+// ************************************************************************* //

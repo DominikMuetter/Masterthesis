@@ -1,0 +1,174 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2506                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     simpleFoam;
+
+startFrom       latestTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         1000;
+
+deltaT          1;
+
+writeControl    timeStep;
+
+writeInterval   1000;
+
+purgeWrite      0;
+
+writeFormat     binary;
+
+writePrecision  6;
+
+writeCompression false;
+
+timeFormat      general;
+
+timePrecision   6;
+
+runTimeModifiable true;
+
+adjustTimeStep  true;
+
+maxCo           0.8;
+
+functions {
+  yPlus1 {
+    type            yPlus;
+    libs            (fieldFunctionObjects);
+    writeFields     yes;
+    executeControl  timeStep;
+    executeInterval 1;
+    writeControl    timeStep;
+  }
+
+ /*  Does not work like this
+  ReynoldsNo1
+  {
+      type            ReynoldsNo;
+      libs            (fieldFunctionObjects);
+      L               1.0;
+      executeControl  timeStep;
+      executeInterval 1;
+      writeControl    timeStep;
+  } */
+  
+/* Not yet working   
+  ReynoldsNumber
+  {
+    name            ReynoldsNo;
+    type            coded;
+    libs            (utilityFunctionObjects);
+    writeControl    timeStep;
+    writeInterval   1;
+    
+    codeExecute
+    #{
+        fvMesh& mesh = refCast<fvMesh>(mesh);
+
+        word patchName("IN_X1");
+        scalar D = 0.025;            // characteristic length [m]
+
+        // Find patch ID
+        label patchID = mesh.boundaryMesh().findPatchID(patchName);
+        if (patchID == -1) {
+            Info << "  >> ERROR: Patch " << patchName << " not found!" << nl;
+        }
+        else {
+            // Compute area-weighted mean velocity on that patch ---
+            const volVectorField& U = mesh.lookupObject<volVectorField>("U");
+            const fvPatchVectorField& Up = U.boundaryField()[patchID];
+            const vectorField&   Sf = mesh.Sf().boundaryField()[patchID];
+
+            scalar sumU = 0.0, sumA = 0.0;
+            forAll(Up, faceI)
+            {
+                scalar area = mag(Sf[faceI]);
+                sumU += mag(Up[faceI]) * area;
+                sumA += area;
+            }
+            scalar Umean = (sumA > SMALL) ? sumU/sumA : 0.0;
+
+            // Read kinematic viscosity nu from transportProperties ---
+            // IOdictionary transportProperties
+            // (
+            //   IOobject
+            //   (
+            //     "transportProperties",
+            //     mesh(),
+            //     mesh,
+            //     IOobject::MUST_READ,
+            //     IOobject::NO_WRITE
+            //   )
+            // );
+            // ITstream nuDim = transportProperties.lookup("nu");
+            // scalar nu = nuDim.value();
+            scalar nu = 1.82E-5;
+            // Compute Reynolds number ---
+            scalar Re = Umean * D / nu;
+
+            Info << "Reynolds number on patch " << patchName 
+                 << "  (Umean=" << Umean << " m/s, D=" << D 
+                 << " m, nu=" << nu << " m2/s):  Re = " << Re << nl;
+        }
+    #};
+  } */
+
+boundingK {
+    type          fieldMinMax;
+    libs          (fieldFunctionObjects);
+    writeControl  timeStep;
+    writeFields   true;           // writes fields min/max as volScalarFields
+    log           true;           // writes min/max to log
+    // region        "";             // (if using regions, specify region name)
+    fields        ( k );
+  }
+  boundingOmega {
+    type          fieldMinMax;
+    libs          (fieldFunctionObjects);
+    writeControl  timeStep;
+    writeFields   true;
+    log           true;
+    fields        ( omega );
+  }
+
+  limitOmegaMax
+  {
+    type            limitFields;
+    libs            (fieldFunctionObjects);
+    active          true;
+
+    fields          (omega);
+    limit           max;
+    max             1E6;
+  }
+
+  limitOmegaMin
+  {
+    type            limitFields;
+    libs            (fieldFunctionObjects);
+    active          true;
+
+    fields          (omega);
+    limit           min;
+    min             1E-5;
+  }
+}
+
+// ************************************************************************* //
